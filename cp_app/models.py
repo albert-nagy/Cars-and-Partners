@@ -15,7 +15,7 @@ class Partner(models.Model):
         models.IntegerField(), blank=True
         )
     created_at = UnixTimeStampField(auto_now_add=True, use_numeric=True)
-    modified_at = UnixTimeStampField(auto_now=True, use_numeric=True)
+    modify_at = UnixTimeStampField(auto_now=True, use_numeric=True)
     deleted_at = UnixTimeStampField(default=0, use_numeric=True)
 
     def __str__(self):
