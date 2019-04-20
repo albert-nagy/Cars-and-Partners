@@ -8,8 +8,22 @@ from rest_framework.decorators import api_view
 from cp_app.models import Partner
 from cp_app.serializers import PartnerSerializer, UserSerializer
 from django.contrib.auth.models import User
+from functools import wraps
 
 # Create your views here.
+def authorizeUser(fn):
+    @wraps(fn)
+    def wrapper(request, *args, **kwargs):
+        user=request.user.id
+        if request.user.is_authenticated:
+            response = fn(request)
+
+        else:
+            response = Response(
+                "This action requires login!", status=status.HTTP_400_BAD_REQUEST)
+        return response
+    return wrapper
+
 def root(request): 
     response = {}
     response['logged_in'] = False
@@ -36,6 +50,7 @@ def partner_list(request):
     return JsonResponse(serializer.data, safe=False)
 
 @api_view(['POST'])
+@authorizeUser
 def partner_add(request):
     """Create new partner"""
     serializer = PartnerSerializer(data=request.data)
