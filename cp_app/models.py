@@ -12,7 +12,7 @@ class Partner(models.Model):
     address = models.CharField(max_length=200)
     company_name = models.CharField(max_length=160)
     cars = ArrayField(
-        models.IntegerField(), blank=True
+        models.IntegerField(), blank=True, default=list
         )
     created_at = UnixTimeStampField(auto_now_add=True, use_numeric=True)
     modify_at = UnixTimeStampField(auto_now=True, use_numeric=True)
