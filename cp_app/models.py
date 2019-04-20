@@ -14,16 +14,17 @@ class Partner(models.Model):
     cars = ArrayField(
         models.IntegerField(), blank=True, default=list
         )
-    created_at = UnixTimeStampField(auto_now_add=True, blank=False)
-    modify_at = UnixTimeStampField(auto_now=True, blank=False)
-    deleted_at = UnixTimeStampField(default=0)
+    created_at = UnixTimeStampField(
+        auto_now_add=True,
+        use_numeric=True,
+        blank=False
+        )
+    modify_at = UnixTimeStampField(
+        auto_now=True,
+        use_numeric=True,
+        blank=False
+        )
+    deleted_at = UnixTimeStampField(default=0, use_numeric=True)
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        try:
-            self.id = Partner.objects.latest('id').id +1
-        except Partner.DoesNotExist:
-            self.id = 1
-        super().save(*args, **kwargs)

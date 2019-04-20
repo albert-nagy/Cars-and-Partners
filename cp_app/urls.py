@@ -7,4 +7,5 @@ urlpatterns = [
     url(r'^partners/$', views.partner_list),
     url(r'^partners/add$', views.partner_add),
     url(r'^partners/(\d+)$', views.partner_detail),
+    url(r'^partners/delete/(\d+)$', views.partner_delete),
 ]
