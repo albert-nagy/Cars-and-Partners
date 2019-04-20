@@ -26,6 +26,4 @@ class Partner(models.Model):
             self.id = Partner.objects.latest('id').id +1
         except Partner.DoesNotExist:
             self.id = 1
-        
-        
         super().save(*args, **kwargs)

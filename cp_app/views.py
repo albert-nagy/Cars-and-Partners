@@ -20,32 +20,32 @@ def root(request):
         response['username'] = request.user.username
     return JsonResponse(response)
 
-@api_view(['GET', 'POST'])
+@api_view(['GET'])
 def partner_list(request):
-    """List all partners and create new"""
-    if request.method == 'GET':
-        partners = Partner.objects.all()
-        serializer = PartnerSerializer(partners, many=True)
-        return JsonResponse(serializer.data, safe=False)
+    """List all partners"""
+    partners = Partner.objects.all()
+    serializer = PartnerSerializer(partners, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
-    elif request.method == 'POST':
-        serializer = PartnerSerializer(data=request.data)
-        if serializer.is_valid():
-            user = User.objects.get(id=request.user.id)
-            serializer.save(user=user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+def partner_add(request):
+    """Create new partner"""
+    serializer = PartnerSerializer(data=request.data)
+    if serializer.is_valid():
+        user = User.objects.get(id=request.user.id)
+        serializer.save(user=user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'POST'])
+@api_view(['GET'])
 def partner_detail(request, id):
     """Retrieve a particular partner"""
     try:
         partner = Partner.objects.get(id=id)
     except Partner.DoesNotExist:
         return HttpResponse(status=404)
-
-    if request.method == 'GET':
-        serializer = PartnerSerializer(partner)
-        return JsonResponse(serializer.data)
+        
+    serializer = PartnerSerializer(partner)
+    return JsonResponse(serializer.data)
 
     
