@@ -11,7 +11,7 @@ pip install psycopg2-binary django==1.11.20 djangorestframework django-unixtimes
 
 `/cp/add_user`
 
-Using this endpoint you can add a new user with username and passeword from the command line:
+Using this endpoint you can add a new user with username and password from the command line:
 
 ```bash
 curl -X POST -H "Content-type: application/json" -d '{"username": "USERNAME", "password": "PASSWORD"}' 'http://127.0.0.1:8000/cp/add_user'
