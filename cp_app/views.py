@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
@@ -24,3 +24,15 @@ def partner_list(request):
         partners = Partner.objects.all()
         serializer = PartnerSerializer(partners, many=True)
         return JsonResponse(serializer.data, safe=False)
+
+@csrf_exempt
+def partner_detail(request, id):
+    """Retrieve a particular partner"""
+    try:
+        partner = Partner.objects.get(id=id)
+    except Partner.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if request.method == 'GET':
+        serializer = PartnerSerializer(partner)
+        return JsonResponse(serializer.data)
