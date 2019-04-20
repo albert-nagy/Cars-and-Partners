@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 class Partner(models.Model):
     id = models.IntegerField(default=0, primary_key=True)
-    user = models.ForeignKey(User, default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=160)
     city = models.CharField(max_length=100)
     address = models.CharField(max_length=200)
