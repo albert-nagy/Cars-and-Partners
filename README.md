@@ -44,6 +44,8 @@ curl --user USERNAME:PASSWORD -X POST -H "Content-type: application/json" -d '{"
 `/cp/partners/(\d+) [DELETE]`
 
 This endpoint sets the 'deleted_at' field of a partner to the current time. Partners whose 'deleted_at' is not 0.0 are considered deleted.
+If there are connections with cars, the referring values get changed to negative on both sides to archive the connection.
+This enables a possible future restoration of the instance along with its archived connections. 
 
 ```bash
 curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/cp/partners/ID'
@@ -74,6 +76,8 @@ curl --user USERNAME:PASSWORD -X POST -H "Content-type: application/json" -d '{"
 `/cp/cars/(\d+) [DELETE]`
 
 This endpoint sets the 'deleted_at' field of a car to the current time. Cars whose 'deleted_at' is not 0.0 are considered deleted.
+If there are connections with partners, the referring values get changed to negative on both sides to archive the connection.
+This enables a possible future restoration of the instance along with its archived connections
 
 ```bash
 curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/cp/cars/ID'

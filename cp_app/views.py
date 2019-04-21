@@ -128,6 +128,21 @@ class PartnerDetail(APIView):
         """Delete partner"""
         partner = Partner.objects.get(id=id)
         data = {"deleted_at": time()}
+        # If there are connections, archive them by setting their ids negative
+        # in the connections list and vice versa
+        if len(partner.cars) > 0:
+            car_list = [car * -1 if car > 0 else car for car in partner.cars]
+            data.update({"cars": car_list})
+            cars = Car.objects.filter(id__in=partner.cars)
+            for car in cars:
+                partner_list = [
+                part * -1 if part == int(id) else part for part in car.partners
+                ]
+                car_data = {"partners": partner_list}
+                serializer = CarSerializer(car, data=car_data, partial=True)
+                response = save_item(serializer)
+                if response[1] == s_400:
+                    return Response(response[0], status=response[1])
         serializer = PartnerSerializer(partner, data=data, partial=True)
         response = save_item(serializer)
         return Response(response[0], status=response[1])
@@ -171,6 +186,27 @@ class CarDetail(APIView):
         """Delete car"""
         car = Car.objects.get(id=id)
         data = {"deleted_at": time()}
+        # If there are connections, archive them by setting their ids negative
+        # in the connections list and vice versa
+        if len(car.partners) > 0:
+            partner_list = [
+            partner * -1 if partner > 0 else partner for partner in car.partners
+            ]
+            data.update({"partners": partner_list})
+            partners = Partner.objects.filter(id__in=car.partners)
+            for partner in partners:
+                car_list = [
+                c_id * -1 if c_id == int(id) else c_id for c_id in partner.cars
+                ]
+                partner_data = {"cars": car_list}
+                serializer = PartnerSerializer(
+                    partner,
+                    data=partner_data,
+                    partial=True
+                    )
+                response = save_item(serializer)
+                if response[1] == s_400:
+                    return Response(response[0], status=response[1])
         serializer = CarSerializer(car, data=data, partial=True)
         response = save_item(serializer)
         return Response(response[0], status=response[1])
