@@ -196,8 +196,10 @@ class CarDetail(APIView):
                     partial=True
                     )
                 response = save_item(serializer)
+                # If something went wrong, get an error message right here
                 if response[1] == s_400:
                     return Response(response[0], status=response[1])
+                # If everything is OK, create dict for final response
                 response_data = {}
                 response_data.update({"car": response[0]})
                 # Save connection partner-side
@@ -208,8 +210,10 @@ class CarDetail(APIView):
                     partial=True
                     )
                 response = save_item(serializer)
+                # If something went wrong here, break
                 if response[1] == s_400:
                     return Response(response[0], status=response[1])
+                # Otherwise finish and return response
                 response_data.update({"partner": response[0]})
                 return Response(response_data, status=response[1])
             return Response(
