@@ -83,12 +83,23 @@ def partner_detail(request, id):
 @authorizeUser
 def partner_delete(request, id):
     """Delete partner"""
-    partner = Partner.objects.get(id=id)
-    data = {"deleted_at": time()}
-    serializer = PartnerSerializer(partner, data=data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        partner = Partner.objects.get(id=id)
+        if partner.deleted_at == 0:
+            data = {"deleted_at": time()}
+            serializer = PartnerSerializer(partner, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            "The requested item was already deleted",
+            status=status.HTTP_404_NOT_FOUND
+            )
+    except Partner.DoesNotExist:
+        return Response(
+        "The requested item was not found",
+        status=status.HTTP_404_NOT_FOUND
+        )
 
     
