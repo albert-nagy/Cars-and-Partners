@@ -18,14 +18,20 @@ from time import time
 def authorizeUser(fn):
     @wraps(fn)
     def wrapper(obj, request, *args, **kwargs):
-        user=request.user.id
         if request.user.is_authenticated:
+            if isinstance(obj, PartnerDetail):
+                if Partner.objects.get(id=args[0]).user_id != request.user.id:
+                    return Response(
+                        "You have no permission to change this item!",
+                        status=status.HTTP_400_BAD_REQUEST
+                        )
             response = fn(obj, request, *args)
 
         else:
             response = Response(
                 "This action requires login!",
-                status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST
+                )
         return response
     return wrapper
 
