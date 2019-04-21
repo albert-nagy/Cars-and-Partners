@@ -62,7 +62,7 @@ curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/cp/partners/ID'
 Add a new car from the command line:
 
 ```bash
-curl --user USERNAME:PASSWORD -H "Content-type: application/json" -d '{"average_fuel": NUM, "driver": "DRIVER", "owner": "OWNER", "type": "pr"/"co"}' 'http://127.0.0.1:8000/cp/cars/'
+curl --user USERNAME:PASSWORD -X POST -H "Content-type: application/json" -d '{"average_fuel": NUM, "driver": "DRIVER", "owner": "OWNER", "type": "pr"/"co"}' 'http://127.0.0.1:8000/cp/cars/'
 ```
 
 #### Get a specific car by Id in JSON
