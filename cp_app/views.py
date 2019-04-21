@@ -61,6 +61,14 @@ def authorizeUser(fn):
         return response
     return wrapper
 
+# Helper functions:
+
+def save_item(serializer):
+    if serializer.is_valid():
+        serializer.save()
+        return (serializer.data, s_201)
+    return (serializer.errors, s_400)
+
 # Views:
 
 def root(request): 
@@ -75,10 +83,7 @@ def root(request):
 class UserAdd(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=s_201)
-        return Response(serializer.errors, status=s_400)
+        return save_item(serializer)
 
 class PartnerList(APIView):
 
@@ -124,10 +129,8 @@ class PartnerDetail(APIView):
         partner = Partner.objects.get(id=id)
         data = {"deleted_at": time()}
         serializer = PartnerSerializer(partner, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=s_201)
-        return Response(serializer.errors, status=s_400)
+        response = save_item(serializer)
+        return Response(response[0], status=response[1])
                
 class CarList(APIView):
 
@@ -169,10 +172,8 @@ class CarDetail(APIView):
         car = Car.objects.get(id=id)
         data = {"deleted_at": time()}
         serializer = CarSerializer(car, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=s_201)
-        return Response(serializer.errors, status=s_400)
+        response = save_item(serializer)
+        return Response(response[0], status=response[1])
 
     @authorizeUser
     def patch(self, request, id):
@@ -187,21 +188,30 @@ class CarDetail(APIView):
             if partner_id not in car_partners and id not in partner_cars:
                 car_partners.append(partner_id)
                 partner_cars.append(id)
+                # Save connection car-side
                 data = {"partners": car_partners}
-                serializer = CarSerializer(car, data=data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    response = Response(serializer.data, status=s_201)
-                else:
-                    response = Response(serializer.errors, status=s_400)
+                serializer = CarSerializer(
+                    car,
+                    data=data,
+                    partial=True
+                    )
+                response = save_item(serializer)
+                if response[1] == s_400:
+                    return Response(response[0], status=response[1])
+                response_data = {}
+                response_data.update({"car": response[0]})
+                # Save connection partner-side
                 data = {"cars": partner_cars}
-                serializer = PartnerSerializer(partner, data=data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    response = Response(serializer.data, status=s_201)
-                else:
-                    response = Response(serializer.errors, status=s_400)
-                return response
+                serializer = PartnerSerializer(
+                    partner,
+                    data=data,
+                    partial=True
+                    )
+                response = save_item(serializer)
+                if response[1] == s_400:
+                    return Response(response[0], status=response[1])
+                response_data.update({"partner": response[0]})
+                return Response(response_data, status=response[1])
             return Response(
             "Partner was already assigned to this car",
             status=s_400
