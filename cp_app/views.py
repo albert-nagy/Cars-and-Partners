@@ -14,7 +14,14 @@ from django.contrib.auth.models import User
 from functools import wraps
 from time import time
 
-# Create your views here.
+# Response status codes:
+
+s_201 = status.HTTP_201_CREATED
+s_400 = status.HTTP_400_BAD_REQUEST
+s_404 = status.HTTP_404_NOT_FOUND
+
+# Authorization decorator:
+
 def authorizeUser(fn):
     @wraps(fn)
     def wrapper(obj, request, *args, **kwargs):
@@ -28,27 +35,29 @@ def authorizeUser(fn):
                     if item.deleted_at > 0:
                         return Response(
                             "The requested item was already deleted",
-                            status=status.HTTP_404_NOT_FOUND
+                            status=s_404
                             )
                     if item.user_id != request.user.id:
                         return Response(
                             "You have no permission to change this item!",
-                            status=status.HTTP_400_BAD_REQUEST
+                            status=s_400
                             )
                 except item_class.DoesNotExist:
                     return Response(
                     "The requested item was not found",
-                    status=status.HTTP_404_NOT_FOUND
+                    status=s_404
                     )
             response = fn(obj, request, *args)
 
         else:
             response = Response(
                 "This action requires login!",
-                status=status.HTTP_400_BAD_REQUEST
+                status=s_400
                 )
         return response
     return wrapper
+
+# Views:
 
 def root(request): 
     response = {}
@@ -64,8 +73,8 @@ class UserAdd(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=s_201)
+        return Response(serializer.errors, status=s_400)
 
 class PartnerList(APIView):
 
@@ -86,8 +95,8 @@ class PartnerList(APIView):
                 id = 1
             user = User.objects.get(id=request.user.id)
             serializer.save(id=id, user=user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=s_201)
+        return Response(serializer.errors, status=s_400)
 
     
 class PartnerDetail(APIView):
@@ -110,7 +119,7 @@ class PartnerDetail(APIView):
         serializer = PartnerSerializer(partner, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=s_201)
+        return Response(serializer.errors, status=s_400)
         
         
