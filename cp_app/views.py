@@ -173,3 +173,41 @@ class CarDetail(APIView):
             serializer.save()
             return Response(serializer.data, status=s_201)
         return Response(serializer.errors, status=s_400)
+
+    @authorizeUser
+    def patch(self, request, id):
+        """Assign partner to a car"""
+        car = Car.objects.get(id=id)
+        car_partners = car.partners
+        partner_id = request.data.get('partner')
+        partner = Partner.objects.get(id=partner_id)
+        partner_cars = partner.cars
+
+        if partner.user_id == request.user.id:
+            if partner_id not in car_partners and id not in partner_cars:
+                car_partners.append(partner_id)
+                partner_cars.append(id)
+                data = {"partners": car_partners}
+                serializer = CarSerializer(car, data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    response = Response(serializer.data, status=s_201)
+                else:
+                    response = Response(serializer.errors, status=s_400)
+                data = {"cars": partner_cars}
+                serializer = PartnerSerializer(partner, data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    response = Response(serializer.data, status=s_201)
+                else:
+                    response = Response(serializer.errors, status=s_400)
+                return response
+            return Response(
+            "Partner was already assigned to this car",
+            status=s_400
+            )
+        return Response(
+            "You can only assign your own partners to your cars",
+            status=s_400
+            )
+        # return Response(len(car.partners))
