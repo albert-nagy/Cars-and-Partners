@@ -50,7 +50,7 @@ class PartnerList(APIView):
 
     def get(self, request):
         """List all partners"""
-        partners = Partner.objects.all()
+        partners = Partner.objects.filter(deleted_at=0)
         serializer = PartnerSerializer(partners, many=True)
         return JsonResponse(serializer.data, safe=False)
 
