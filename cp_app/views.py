@@ -20,11 +20,17 @@ def authorizeUser(fn):
     def wrapper(obj, request, *args, **kwargs):
         if request.user.is_authenticated:
             if isinstance(obj, PartnerDetail):
-                if Partner.objects.get(id=args[0]).user_id != request.user.id:
+                try:
+                    if Partner.objects.get(id=args[0]).user_id != request.user.id:
+                        return Response(
+                            "You have no permission to change this item!",
+                            status=status.HTTP_400_BAD_REQUEST
+                            )
+                except Partner.DoesNotExist:
                     return Response(
-                        "You have no permission to change this item!",
-                        status=status.HTTP_400_BAD_REQUEST
-                        )
+                    "The requested item was not found",
+                    status=status.HTTP_404_NOT_FOUND
+                    )
             response = fn(obj, request, *args)
 
         else:
@@ -90,21 +96,16 @@ class PartnerDetail(APIView):
     @authorizeUser
     def delete(self, request, id):
         """Delete partner"""
-        try:
-            partner = Partner.objects.get(id=id)
-            if partner.deleted_at == 0:
-                data = {"deleted_at": time()}
-                serializer = PartnerSerializer(partner, data=data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response(
-                "The requested item was already deleted",
-                status=status.HTTP_404_NOT_FOUND
-                )
-        except Partner.DoesNotExist:
-            return Response(
-            "The requested item was not found",
+        partner = Partner.objects.get(id=id)
+        if partner.deleted_at == 0:
+            data = {"deleted_at": time()}
+            serializer = PartnerSerializer(partner, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            "The requested item was already deleted",
             status=status.HTTP_404_NOT_FOUND
             )
+        
