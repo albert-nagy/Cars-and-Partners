@@ -38,21 +38,13 @@ def root(request):
         response['username'] = request.user.username
     return JsonResponse(response)
 
-@api_view(['POST'])
-def user_add(request):
-    """Create new user"""
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-def partner_list(request):
-    """List all partners"""
-    partners = Partner.objects.all()
-    serializer = PartnerSerializer(partners, many=True)
-    return JsonResponse(serializer.data, safe=False)
+class UserAdd(APIView):
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PartnerList(APIView):
     """List all partners"""
