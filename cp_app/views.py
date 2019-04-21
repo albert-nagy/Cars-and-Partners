@@ -27,8 +27,12 @@ def authorizeUser(fn):
     def wrapper(obj, request, *args, **kwargs):
         if request.user.is_authenticated:
             item_model = None
+
             if isinstance(obj, PartnerDetail):
                 item_model = Partner
+            elif isinstance(obj, CarDetail):
+                item_model = Car
+
             if item_model is not None:
                 try:
                     item = item_model.objects.get(id=args[0])
@@ -106,7 +110,10 @@ class PartnerDetail(APIView):
         try:
             partner = Partner.objects.get(id=id, deleted_at=0)
         except Partner.DoesNotExist:
-            return HttpResponse("The requested item was not found", status=404)
+            return HttpResponse(
+                "The requested partner was not found",
+                status=404
+                )
 
         serializer = PartnerSerializer(partner)
         return JsonResponse(serializer.data)
@@ -141,5 +148,28 @@ class CarList(APIView):
                 id = 1
             user = User.objects.get(id=request.user.id)
             serializer.save(id=id, user=user)
+            return Response(serializer.data, status=s_201)
+        return Response(serializer.errors, status=s_400)
+
+class CarDetail(APIView):
+
+    def get(self, request, id):
+        """Retrieve a particular car"""
+        try:
+            car = Car.objects.get(id=id, deleted_at=0)
+        except Car.DoesNotExist:
+            return HttpResponse("The requested car was not found", status=404)
+
+        serializer = CarSerializer(car)
+        return JsonResponse(serializer.data)
+
+    @authorizeUser
+    def delete(self, request, id):
+        """Delete car"""
+        car = Car.objects.get(id=id)
+        data = {"deleted_at": time()}
+        serializer = CarSerializer(car, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
             return Response(serializer.data, status=s_201)
         return Response(serializer.errors, status=s_400)

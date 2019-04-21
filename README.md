@@ -64,3 +64,17 @@ Add a new car from the command line:
 ```bash
 curl --user USERNAME:PASSWORD -H "Content-type: application/json" -d '{"average_fuel": NUM, "driver": "DRIVER", "owner": "OWNER", "type": "pr"/"co"}' 'http://127.0.0.1:8000/cp/cars/'
 ```
+
+#### Get a specific car by Id in JSON
+
+`/cp/cars/(\d+) [GET]`
+
+#### Delete car by ID
+
+`/cp/cars/(\d+) [DELETE]`
+
+This endpoint sets the 'deleted_at' field of a car to the current time. Cars whose 'deleted_at' is not 0.0 are considered deleted.
+
+```bash
+curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/cp/cars/ID'
+```
