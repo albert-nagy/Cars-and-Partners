@@ -17,10 +17,10 @@ from time import time
 # Create your views here.
 def authorizeUser(fn):
     @wraps(fn)
-    def wrapper(request, *args, **kwargs):
+    def wrapper(obj, request, *args, **kwargs):
         user=request.user.id
         if request.user.is_authenticated:
-            response = fn(request, *args)
+            response = fn(obj, request, *args)
 
         else:
             response = Response(
@@ -47,27 +47,28 @@ class UserAdd(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PartnerList(APIView):
-    """List all partners"""
+
     def get(self, request):
+        """List all partners"""
         partners = Partner.objects.all()
         serializer = PartnerSerializer(partners, many=True)
         return JsonResponse(serializer.data, safe=False)
 
+    @authorizeUser
+    def post(self, request):
+        """Create new partner"""
+        serializer = PartnerSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                id = Partner.objects.latest('id').id +1
+            except Partner.DoesNotExist:
+                id = 1
+            user = User.objects.get(id=request.user.id)
+            serializer.save(id=id, user=user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-@authorizeUser
-def partner_add(request):
-    """Create new partner"""
-    serializer = PartnerSerializer(data=request.data)
-    if serializer.is_valid():
-        try:
-            id = Partner.objects.latest('id').id +1
-        except Partner.DoesNotExist:
-            id = 1
-        user = User.objects.get(id=request.user.id)
-        serializer.save(id=id, user=user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 @api_view(['GET'])
 def partner_detail(request, id):
