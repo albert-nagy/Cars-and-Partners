@@ -63,3 +63,6 @@ class Car(models.Model):
         blank=False
         )
     deleted_at = UnixTimeStampField(default=0, use_numeric=True)
+
+    def __str__(self):
+        return str(self.id)
