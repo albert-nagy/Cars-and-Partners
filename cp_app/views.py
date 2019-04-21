@@ -26,12 +26,12 @@ def authorizeUser(fn):
     @wraps(fn)
     def wrapper(obj, request, *args, **kwargs):
         if request.user.is_authenticated:
-            item_class = None
+            item_model = None
             if isinstance(obj, PartnerDetail):
-                item_class = Partner
-            if item_class is not None:
+                item_model = Partner
+            if item_model is not None:
                 try:
-                    item = item_class.objects.get(id=args[0])
+                    item = item_model.objects.get(id=args[0])
                     if item.deleted_at > 0:
                         return Response(
                             "The requested item was already deleted",
@@ -42,7 +42,7 @@ def authorizeUser(fn):
                             "You have no permission to change this item!",
                             status=s_400
                             )
-                except item_class.DoesNotExist:
+                except item_model.DoesNotExist:
                     return Response(
                     "The requested item was not found",
                     status=s_404
