@@ -74,7 +74,7 @@ def partner_detail(request, id):
     try:
         partner = Partner.objects.get(id=id)
     except Partner.DoesNotExist:
-        return HttpResponse(status=404)
+        return HttpResponse("The requested item was not found", status=404)
 
     serializer = PartnerSerializer(partner)
     return JsonResponse(serializer.data)
