@@ -7,7 +7,9 @@ pip install psycopg2-binary django==1.11.20 djangorestframework django-unixtimes
 
 ## Endpoints
 
-### Add new user
+### Users
+
+#### Add new user
 
 `/cp/add_user  [POST]` 
 
@@ -17,11 +19,13 @@ Using this endpoint you can add a new user with username and password from the c
 curl -X POST -H "Content-type: application/json" -d '{"username": "USERNAME", "password": "PASSWORD"}' 'http://127.0.0.1:8000/cp/add_user'
 ```
 
-### List all partners in JSON
+### Partners
+
+#### List all partners in JSON
 
 `/cp/partners/ [GET]`
 
-### Add new partner
+#### Add new partner
 
 `/cp/partners/ [POST]`
 
@@ -31,11 +35,11 @@ Add a new partner from the command line:
 curl --user USERNAME:PASSWORD -X POST -H "Content-type: application/json" -d '{"name": "NAME", "city": "CITY", "address": "ADDRESS", "company_name": "COMPANY_NAME"}' 'http://127.0.0.1:8000/cp/partners/'
 ```
 
-### Get a specific partner by Id in JSON
+#### Get a specific partner by Id in JSON
 
 `/cp/partners/(\d+) [GET]`
 
-### Delete partner by ID
+#### Delete partner by ID
 
 `/cp/partners/(\d+) [DELETE]`
 
@@ -43,4 +47,20 @@ This endpoint sets the 'deleted_at' field of a partner to the current time. Part
 
 ```bash
 curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/cp/partners/ID'
+```
+
+### Cars
+
+#### List all cars in JSON
+
+`/cp/cars/ [GET]`
+
+#### Add new car
+
+`/cp/cars/ [POST]`
+
+Add a new car from the command line:
+
+```bash
+curl --user USERNAME:PASSWORD -H "Content-type: application/json" -d '{"average_fuel": NUM, "driver": "DRIVER", "owner": "OWNER", "type": "pr/co"}' 'http://127.0.0.1:8000/cp/cars/'
 ```

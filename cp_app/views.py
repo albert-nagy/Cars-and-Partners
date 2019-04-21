@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 
-from cp_app.models import Partner
-from cp_app.serializers import PartnerSerializer, UserSerializer
+from cp_app.models import Partner, Car
+from cp_app.serializers import PartnerSerializer, UserSerializer, CarSerializer
 from django.contrib.auth.models import User
 
 from functools import wraps
@@ -121,5 +121,25 @@ class PartnerDetail(APIView):
             serializer.save()
             return Response(serializer.data, status=s_201)
         return Response(serializer.errors, status=s_400)
-        
-        
+               
+class CarList(APIView):
+
+    def get(self, request):
+        """List all cars"""
+        cars = Car.objects.filter(deleted_at=0).order_by('id')
+        serializer = CarSerializer(cars, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    @authorizeUser
+    def post(self, request):
+        """Create new car"""
+        serializer = CarSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                id = Car.objects.latest('id').id +1
+            except Car.DoesNotExist:
+                id = 1
+            user = User.objects.get(id=request.user.id)
+            serializer.save(id=id, user=user)
+            return Response(serializer.data, status=s_201)
+        return Response(serializer.errors, status=s_400)
