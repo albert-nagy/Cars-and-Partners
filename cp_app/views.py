@@ -74,7 +74,7 @@ class PartnerDetail(APIView):
     def get(self, request, id):
         """Retrieve a particular partner"""
         try:
-            partner = Partner.objects.get(id=id)
+            partner = Partner.objects.get(id=id, deleted_at=0)
         except Partner.DoesNotExist:
             return HttpResponse("The requested item was not found", status=404)
 
