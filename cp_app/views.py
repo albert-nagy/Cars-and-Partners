@@ -69,39 +69,36 @@ class PartnerList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
+class PartnerDetail(APIView):
 
-@api_view(['GET'])
-def partner_detail(request, id):
-    """Retrieve a particular partner"""
-    try:
-        partner = Partner.objects.get(id=id)
-    except Partner.DoesNotExist:
-        return HttpResponse("The requested item was not found", status=404)
+    def get(self, request, id):
+        """Retrieve a particular partner"""
+        try:
+            partner = Partner.objects.get(id=id)
+        except Partner.DoesNotExist:
+            return HttpResponse("The requested item was not found", status=404)
 
-    serializer = PartnerSerializer(partner)
-    return JsonResponse(serializer.data)
+        serializer = PartnerSerializer(partner)
+        return JsonResponse(serializer.data)
 
-@api_view(['DELETE'])
-@authorizeUser
-def partner_delete(request, id):
-    """Delete partner"""
-    try:
-        partner = Partner.objects.get(id=id)
-        if partner.deleted_at == 0:
-            data = {"deleted_at": time()}
-            serializer = PartnerSerializer(partner, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(
-            "The requested item was already deleted",
+    @authorizeUser
+    def delete(self, request, id):
+        """Delete partner"""
+        try:
+            partner = Partner.objects.get(id=id)
+            if partner.deleted_at == 0:
+                data = {"deleted_at": time()}
+                serializer = PartnerSerializer(partner, data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                "The requested item was already deleted",
+                status=status.HTTP_404_NOT_FOUND
+                )
+        except Partner.DoesNotExist:
+            return Response(
+            "The requested item was not found",
             status=status.HTTP_404_NOT_FOUND
             )
-    except Partner.DoesNotExist:
-        return Response(
-        "The requested item was not found",
-        status=status.HTTP_404_NOT_FOUND
-        )
-
-    
