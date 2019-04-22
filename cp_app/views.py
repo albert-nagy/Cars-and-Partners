@@ -4,8 +4,10 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 
 from cp_app.models import Partner, Car
 from cp_app.serializers import PartnerSerializer, UserSerializer, CarSerializer
@@ -25,39 +27,32 @@ s_404 = status.HTTP_404_NOT_FOUND
 def authorizeUser(fn):
     @wraps(fn)
     def wrapper(obj, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            item_model = None
+        item_model = None
 
-            if isinstance(obj, PartnerDetail):
-                item_model = Partner
-            elif isinstance(obj, CarDetail):
-                item_model = Car
+        if isinstance(obj, PartnerDetail):
+            item_model = Partner
+        elif isinstance(obj, CarDetail):
+            item_model = Car
 
-            if item_model is not None:
-                try:
-                    item = item_model.objects.get(id=args[0])
-                    if item.deleted_at > 0:
-                        return Response(
-                            "The requested item was already deleted",
-                            status=s_404
-                            )
-                    if item.user_id != request.user.id:
-                        return Response(
-                            "You have no permission to change this item!",
-                            status=s_400
-                            )
-                except item_model.DoesNotExist:
+        if item_model is not None:
+            try:
+                item = item_model.objects.get(id=args[0])
+                if item.deleted_at > 0:
                     return Response(
-                    "The requested item was not found",
-                    status=s_404
-                    )
-            response = fn(obj, request, *args)
-
-        else:
-            response = Response(
-                "This action requires login!",
-                status=s_400
+                        "The requested item was already deleted",
+                        status=s_404
+                        )
+                if item.user_id != request.user.id:
+                    return Response(
+                        "You have no permission to change this item!",
+                        status=s_400
+                        )
+            except item_model.DoesNotExist:
+                return Response(
+                "The requested item was not found",
+                status=s_404
                 )
+        response = fn(obj, request, *args)
         return response
     return wrapper
 
@@ -83,9 +78,11 @@ def root(request):
 class UserAdd(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
-        return save_item(serializer)
+        response = save_item(serializer)
+        return Response(response[0], status=response[1])
 
 class PartnerList(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request):
         """List all partners"""
@@ -109,6 +106,7 @@ class PartnerList(APIView):
 
     
 class PartnerDetail(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request, id):
         """Retrieve a particular partner"""
@@ -146,15 +144,17 @@ class PartnerDetail(APIView):
         serializer = PartnerSerializer(partner, data=data, partial=True)
         response = save_item(serializer)
         return Response(response[0], status=response[1])
+
                
 class CarList(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request):
         """List all cars"""
         cars = Car.objects.filter(deleted_at=0).order_by('id')
         serializer = CarSerializer(cars, many=True)
         return JsonResponse(serializer.data, safe=False)
-
+  
     @authorizeUser
     def post(self, request):
         """Create new car"""
@@ -170,6 +170,7 @@ class CarList(APIView):
         return Response(serializer.errors, status=s_400)
 
 class CarDetail(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request, id):
         """Retrieve a particular car"""

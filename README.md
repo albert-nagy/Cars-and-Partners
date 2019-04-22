@@ -1,8 +1,7 @@
 ## Installation
 
 ```bash
-pip install psycopg2-binary django==1.11.20 djangorestframework django-unixtimestampfield django-request-logging
-
+pip install psycopg2-binary django==1.11.20 djangorestframework django-unixtimestampfield django-request-logging django-rest-auth
 ```
 
 ## Endpoints
@@ -11,13 +10,24 @@ pip install psycopg2-binary django==1.11.20 djangorestframework django-unixtimes
 
 #### Add new user
 
-`/api/v1/add_user  [POST]` 
+`/api/v1/add_user/  [POST]` 
 
 Using this endpoint you can add a new user with username and password from the command line:
 
 ```bash
-curl -X POST -H "Content-type: application/json" -d '{"username": "USERNAME", "password": "PASSWORD"}' 'http://127.0.0.1:8000/api/v1/add_user'
+curl -X POST -H "Content-type: application/json" -d '{"username": "USERNAME", "password": "PASSWORD"}' 'http://127.0.0.1:8000/api/v1/add_user/'
 ```
+
+#### User Login
+
+`/api/v1/rest-auth/login/  [POST]` 
+
+Get your authorization token by signing in with your credentials. Paste the token (key) you get in the response into the request wherever it is required.
+
+```bash
+curl -X POST -H "Content-type: application/json" -d '{"username": "USERNAME", "password": "PASSWORD"}' 'http://127.0.0.1:8000/api/v1/rest-auth/login/'
+```
+
 
 ### Partners
 
@@ -29,10 +39,10 @@ curl -X POST -H "Content-type: application/json" -d '{"username": "USERNAME", "p
 
 `/api/v1/partners/ [POST]`
 
-Add a new partner from the command line:
+Add a new partner from the command line. Replace the XXXXXXXXXXXXX... with your auth token.
 
 ```bash
-curl --user USERNAME:PASSWORD -X POST -H "Content-type: application/json" -d '{"name": "NAME", "city": "CITY", "address": "ADDRESS", "company_name": "COMPANY_NAME"}' 'http://127.0.0.1:8000/api/v1/partners/'
+curl -X POST -H "Authorization: Token XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" -H "Content-type: application/json" -d '{"name": "NAME", "city": "CITY", "address": "ADDRESS", "company_name": "COMPANY_NAME"}' 'http://127.0.0.1:8000/api/v1/partners/'
 ```
 
 #### Get a specific partner by Id in JSON
@@ -48,7 +58,7 @@ If there are connections with cars, the referring values get changed to negative
 This enables a possible future restoration of the instance along with its archived connections. 
 
 ```bash
-curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/api/v1/partners/ID/'
+curl -X DELETE -H "Authorization: Token XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" 'http://127.0.0.1:8000/api/v1/partners/ID/'
 ```
 
 ### Cars
@@ -64,7 +74,7 @@ curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/api/v1/partners/I
 Add a new car from the command line:
 
 ```bash
-curl --user USERNAME:PASSWORD -X POST -H "Content-type: application/json" -d '{"average_fuel": NUM, "driver": "DRIVER", "owner": "OWNER", "type": "pr"/"co"}' 'http://127.0.0.1:8000/api/v1/cars/'
+curl -X POST -H "Authorization: Token XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" -H "Content-type: application/json" -d '{"average_fuel": NUM, "driver": "DRIVER", "owner": "OWNER", "type": "pr"/"co"}' 'http://127.0.0.1:8000/api/v1/cars/'
 ```
 
 #### Get a specific car by Id in JSON
@@ -80,7 +90,7 @@ If there are connections with partners, the referring values get changed to nega
 This enables a possible future restoration of the instance along with its archived connections
 
 ```bash
-curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/api/v1/cars/ID/'
+curl -X DELETE -H "Authorization: Token XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" 'http://127.0.0.1:8000/api/v1/cars/ID/'
 ```
 
 #### Assign partner to car
@@ -90,5 +100,5 @@ curl --user USERNAME:PASSWORD -X DELETE 'http://127.0.0.1:8000/api/v1/cars/ID/'
 The partner's ID gets stored in the car's respective array field and vice versa.
 
 ```bash
-curl  --user USERNAME:PASSWORD -X PATCH -H "Content-type: application/json" -d '{"partner": PARTNER_ID}' 'http://127.0.0.1:8000/api/v1/cars/ID/'
+curl -X PATCH -H "Authorization: Token XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" -H "Content-type: application/json" -d '{"partner": PARTNER_ID}' 'http://127.0.0.1:8000/api/v1/cars/ID/'
 ```
