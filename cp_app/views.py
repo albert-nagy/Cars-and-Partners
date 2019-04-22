@@ -219,6 +219,11 @@ class CarDetail(APIView):
         car_partners = car.partners
         partner_id = request.data.get('partner')
         partner = Partner.objects.get(id=partner_id)
+        if partner.deleted_at > 0:
+                    return Response(
+                        "The requested partner was already deleted",
+                        status=s_404
+                        )
         partner_cars = partner.cars
 
         if partner.user_id == request.user.id:
