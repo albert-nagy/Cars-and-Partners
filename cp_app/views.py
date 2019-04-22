@@ -66,15 +66,6 @@ def save_item(serializer):
 
 # Views:
 
-def root(request): 
-    response = {}
-    response['logged_in'] = False
-    if request.user.is_authenticated():
-        response['logged_in'] = True
-        response['id'] = request.user.id
-        response['username'] = request.user.username
-    return JsonResponse(response)
-
 class UserAdd(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
