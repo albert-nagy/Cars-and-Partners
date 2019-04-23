@@ -20,6 +20,7 @@ from time import time
 
 s_201 = status.HTTP_201_CREATED
 s_400 = status.HTTP_400_BAD_REQUEST
+s_401 = status.HTTP_401_UNAUTHORIZED
 s_404 = status.HTTP_404_NOT_FOUND
 
 # Authorization decorator:
@@ -45,7 +46,7 @@ def authorizeUser(fn):
                 if item.user_id != request.user.id:
                     return Response(
                         "You have no permission to change this item!",
-                        status=s_400
+                        status=s_401
                         )
             except item_model.DoesNotExist:
                 return Response(
@@ -255,6 +256,5 @@ class CarDetail(APIView):
             )
         return Response(
             "You can only assign your own partners to your cars",
-            status=s_400
+            status=s_401
             )
-        # return Response(len(car.partners))
