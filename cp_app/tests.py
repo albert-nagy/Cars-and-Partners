@@ -43,6 +43,19 @@ TEST_PARTNERS = [
 }
 ]
 
+TEST_CARS = [
+{
+"average_fuel": 6.7,
+"driver": "Rozs Réka",
+"owner": "Zab Bence",
+"type": "pr"
+},
+{
+"average_fuel": 110,
+"driver": "Árpa Árpád",
+"owner": "Gondatlan Gazda",
+}
+]
 
 class PartnerListTestCase(APITestCase):
 
@@ -205,4 +218,67 @@ class PartnerDetailTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class CarListTestCase(APITestCase):
+
+    def setUp(self):
+        self.url = reverse("car-list")
+        self.client = APIClient()
+
+        self.user = User.objects.create_user(TEST_USERS[0])
+        self.user.save()
+
+        self.car_data = TEST_CARS[0]
+        self.car_data.update({"user": self.user.id})
+
+        self.car2_data = TEST_CARS[1]
+        self.car2_data.update({"user": self.user.id})
+
+    def test_create_car(self):
+        """Try to create car"""
+
+        # First without authentication
+
+        response = self.client.post(self.url, self.car_data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Partner.objects.count(), 0)
+
+        # Then with authentication
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.url, self.car_data)
+
+        # Check if data got stored correctly
+
+        car = Car.objects.get()
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Car.objects.count(), 1)
+        self.assertEqual(car.id, 1)
+        self.assertEqual(car.user_id, self.car_data["user"])
+        self.assertEqual(float(car.average_fuel), self.car_data["average_fuel"])
+        self.assertEqual(car.driver, self.car_data["driver"])
+        self.assertEqual(car.owner, self.car_data["owner"])
+        self.assertEqual(car.type, self.car_data["type"])
+        self.assertEqual(car.delegation_starting, 0)
+        self.assertEqual(car.delegation_ending, 0)
+        self.assertGreater(car.created_at, 0)
+        self.assertGreater(car.modify_at, 0)
+        self.assertEqual(car.deleted_at, 0)
+        self.assertEqual(len(car.partners), 0)
+
+    def test_car_list(self):
+        """Check list of cars"""
+
+        # Fill DB with some data
+
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.url, self.car_data)
+
+        # Check if data gets displayed correctly
+
+        response = self.client.get(self.url)
+        cars = Car.objects.all()
+        self.assertEqual(Car.objects.count(), 1)
+        serializer = CarSerializer(cars, many=True)
+        self.assertEqual(json.loads(response.content), serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 

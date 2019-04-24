@@ -43,7 +43,7 @@ class Car(models.Model):
         decimal_places=2,
         default=0
         )
-    delegation_starting = UnixTimeStampField( use_numeric=True, default=0)
+    delegation_starting = UnixTimeStampField(use_numeric=True, default=0)
     delegation_ending = UnixTimeStampField(use_numeric=True, default=0)
     driver = models.CharField(max_length=160)
     owner = models.CharField(max_length=160)
