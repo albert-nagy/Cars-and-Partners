@@ -17,14 +17,20 @@ class Partner(models.Model):
     created_at = UnixTimeStampField(
         auto_now_add=True,
         use_numeric=True,
+        round_to=3,
         blank=False
         )
     modify_at = UnixTimeStampField(
         auto_now=True,
         use_numeric=True,
+        round_to=3,
         blank=False
         )
-    deleted_at = UnixTimeStampField(default=0, use_numeric=True)
+    deleted_at = UnixTimeStampField(
+        default=0,
+        use_numeric=True,
+        round_to=3
+        )
 
     def __str__(self):
         return self.name
@@ -55,14 +61,20 @@ class Car(models.Model):
     created_at = UnixTimeStampField(
         auto_now_add=True,
         use_numeric=True,
+        round_to=3,
         blank=False
         )
     modify_at = UnixTimeStampField(
         auto_now=True,
         use_numeric=True,
+        round_to=3,
         blank=False
         )
-    deleted_at = UnixTimeStampField(default=0, use_numeric=True)
+    deleted_at = UnixTimeStampField(
+        default=0,
+        use_numeric=True,
+        round_to=3
+        )
 
     def __str__(self):
         return str(self.id)
