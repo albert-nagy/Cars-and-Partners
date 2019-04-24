@@ -298,14 +298,11 @@ class CarDetailTestCase(APITestCase):
         self.user2.save()
 
         self.car_data = TEST_CARS[0]
-        self.car_data.update({"user": self.user.id})
         self.car2_data = TEST_CARS[1]
-        self.car2_data.update({"user": self.user.id})
 
         self.partner_data = TEST_PARTNERS[0]
-        self.partner_data.update({"user": self.user2.id})
         self.partner2_data = TEST_PARTNERS[1]
-        self.partner2_data.update({"user": self.user2.id})
+        
 
     def test_car_get(self):
         """Check a specific car"""
@@ -451,3 +448,93 @@ class CarDetailTestCase(APITestCase):
         response = self.client.patch(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+class DeleteWithConnectionTestCase(APITestCase):
+
+    def setUp(self):
+
+        self.post_url = reverse("car-list")
+        self.partner_post_url = reverse("partner-list")
+        self.client = APIClient()
+
+        self.user = User.objects.create_user(TEST_USERS[0])
+        self.user.save()
+
+        self.car_data = TEST_CARS[0]
+        self.car_data.update({"user": self.user.id})
+        self.car2_data = TEST_CARS[1]
+        self.car2_data.update({"user": self.user.id})
+
+        self.partner_data = TEST_PARTNERS[0]
+        self.partner2_data = TEST_PARTNERS[1]
+       
+    def test_delete_car_with_connections(self):
+        """Delete a car with existing connections"""
+
+        # Create a car and 2 partners
+
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.post_url, self.car_data)
+        self.client.post(self.partner_post_url, self.partner_data)
+        self.client.post(self.partner_post_url, self.partner2_data)
+
+        # Connect them to each other
+
+        url = reverse("car", args=[1])
+
+        data = {"partner": 1}
+        self.client.patch(url, data)
+        data = {"partner": 2}
+        self.client.patch(url, data)
+
+        # Delete the car
+
+        self.client.delete(url)
+
+        car = Car.objects.get(id=1)
+
+        # Check the negative connection values in the array fields
+
+        self.assertIn(-1, car.partners)
+        self.assertIn(-2, car.partners)
+
+        partner1 = Partner.objects.get(id=1)
+        partner2 = Partner.objects.get(id=2)
+
+        self.assertIn(-1, partner1.cars)
+        self.assertIn(-1, partner2.cars)
+
+    def test_delete_partner_with_connections(self):
+        """Delete a partner with existing connections"""
+
+        # Create a partner and 2 cars
+
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.partner_post_url, self.partner_data)
+        self.client.post(self.post_url, self.car_data)
+        self.client.post(self.post_url, self.car2_data)
+
+        # Connect them to each other
+
+        data = {"partner": 1}
+        url = reverse("car", args=[1])
+        self.client.patch(url, data)
+        url = reverse("car", args=[2])
+        self.client.patch(url, data)
+
+        # Delete the partner
+
+        url = reverse("partner", args=[1])
+        self.client.delete(url)
+
+        # Check the negative connection values in the array fields
+
+        partner = Partner.objects.get(id=1)
+
+        self.assertIn(-1, partner.cars)
+        self.assertIn(-2, partner.cars)
+
+        car1 = Car.objects.get(id=1)
+        car2 = Car.objects.get(id=2)
+
+        self.assertIn(-1, car1.partners)
+        self.assertIn(-1, car2.partners)
