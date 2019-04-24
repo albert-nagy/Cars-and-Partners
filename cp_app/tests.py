@@ -41,6 +41,14 @@ class PartnerListTestCase(APITestCase):
         "company_name": self.company_name
         }
 
+        self.partner2_data = {
+        "user": self.user.id,
+        "name": "Bekő Tóni",
+        "city" : "Kiskunbürgözd",
+        "address": "Pacsirta u. 72",
+        "company_name": "Béka Bt."
+        }
+
 
     def test_create_partner(self):
         """Try to create partner"""
@@ -56,8 +64,9 @@ class PartnerListTestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.url, self.partner_data)
 
-        partner = Partner.objects.get()
+        # Check if data got stored correctly
 
+        partner = Partner.objects.get()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Partner.objects.count(), 1)
         self.assertEqual(partner.id, 1)
@@ -70,6 +79,24 @@ class PartnerListTestCase(APITestCase):
         self.assertGreater(partner.modify_at, 0)
         self.assertEqual(partner.deleted_at, 0)
         self.assertEqual(len(partner.cars), 0)
+
+    def test_partner_list(self):
+        """Check list of partners"""
+
+        # Fill DB with some data
+        
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.url, self.partner_data)
+        self.client.post(self.url, self.partner2_data)
+
+        # Check if data gets displayed correctly
+
+        response = self.client.get(self.url)
+        partners = Partner.objects.all()
+        self.assertEqual(Partner.objects.count(), 2)
+        serializer = PartnerSerializer(partners, many=True)
+        self.assertEqual(json.loads(response.content), serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 
