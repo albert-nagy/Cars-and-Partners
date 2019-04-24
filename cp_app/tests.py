@@ -355,7 +355,7 @@ class CarDetailTestCase(APITestCase):
         car = Car.objects.get(id=1)
         self.assertGreater(car.deleted_at, 0)
 
-        # Try to delete an already deleted partner
+        # Try to delete an already deleted car
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
