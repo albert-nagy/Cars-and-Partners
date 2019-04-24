@@ -15,39 +15,49 @@ from cp_app.serializers import PartnerSerializer, CarSerializer, UserSerializer
 
 # Create your tests here.
 
+TEST_USERS = [
+{
+"username": "someone",
+"email": "x@z.hu",
+"password": "truthisoutthere"
+},
+{
+"username": "anyone",
+"email": "x@z.de",
+"password": "noneofyourbusiness"
+}
+]
+
+TEST_PARTNERS = [
+{
+"name": "Lapos Elemér",
+"city": "Albertirsa",
+"address": "Elmebaj u. 999",
+"company_name": "Q Kft."
+},
+{
+"name": "Bekő Tóni",
+"city": "Kiskunbürgözd",
+"address": "Pacsirta u. 72",
+"company_name": "Béka Bt."
+}
+]
+
+
 class PartnerListTestCase(APITestCase):
 
     def setUp(self):
         self.url = reverse("partner-list")
         self.client = APIClient()
 
-        self.user = User.objects.create_user(
-            "someone",
-            "x@z.hu",
-            "truthisoutthere"
-            )
+        self.user = User.objects.create_user(TEST_USERS[0])
         self.user.save()
 
-        self.name = "Lapos Elemér"
-        self.city = "Albertirsa"
-        self.address = "Elmebaj u. 999"
-        self.company_name = "Q Kft."
+        self.partner_data = TEST_PARTNERS[0]
+        self.partner_data.update({"user": self.user.id})
 
-        self.partner_data = {
-        "user": self.user.id,
-        "name": self.name,
-        "city" : self.city,
-        "address": self.address,
-        "company_name": self.company_name
-        }
-
-        self.partner2_data = {
-        "user": self.user.id,
-        "name": "Bekő Tóni",
-        "city" : "Kiskunbürgözd",
-        "address": "Pacsirta u. 72",
-        "company_name": "Béka Bt."
-        }
+        self.partner2_data = TEST_PARTNERS[1]
+        self.partner2_data.update({"user": self.user.id})
 
 
     def test_create_partner(self):
@@ -70,11 +80,11 @@ class PartnerListTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Partner.objects.count(), 1)
         self.assertEqual(partner.id, 1)
-        self.assertEqual(partner.user_id, self.user.id)
-        self.assertEqual(partner.name, self.name)
-        self.assertEqual(partner.city, self.city)
-        self.assertEqual(partner.address, self.address)
-        self.assertEqual(partner.company_name, self.company_name)
+        self.assertEqual(partner.user_id, self.partner_data["user"])
+        self.assertEqual(partner.name, self.partner_data["name"])
+        self.assertEqual(partner.city, self.partner_data["city"])
+        self.assertEqual(partner.address, self.partner_data["address"])
+        self.assertEqual(partner.company_name, self.partner_data["company_name"])
         self.assertGreater(partner.created_at, 0)
         self.assertGreater(partner.modify_at, 0)
         self.assertEqual(partner.deleted_at, 0)
@@ -84,7 +94,7 @@ class PartnerListTestCase(APITestCase):
         """Check list of partners"""
 
         # Fill DB with some data
-        
+
         self.client.force_authenticate(user=self.user)
         self.client.post(self.url, self.partner_data)
         self.client.post(self.url, self.partner2_data)
