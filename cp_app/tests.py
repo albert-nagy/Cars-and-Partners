@@ -158,14 +158,14 @@ class PartnerDetailTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Get a nonexistent parner
+        # Get a nonexistent partner
 
         url = reverse("partner", args=[99])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # Get a deleted parner
+        # Get a deleted partner
 
         self.client.post(self.post_url, self.partner2_data)
         url = reverse("partner", args=[3])
@@ -282,3 +282,52 @@ class CarListTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+class CarDetailTestCase(APITestCase):
+    
+    def setUp(self):
+
+        self.post_url = reverse("car-list")
+        self.client = APIClient()
+
+        self.user = User.objects.create_user(TEST_USERS[0])
+        self.user.save()
+        self.user2 = User.objects.create_user(TEST_USERS[1])
+        self.user2.save()
+
+        self.car_data = TEST_CARS[0]
+        self.car_data.update({"user": self.user.id})
+        self.car2_data = TEST_CARS[1]
+        self.car2_data.update({"user": self.user.id})
+
+    def test_car_get(self):
+        """Check a specific car"""
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.post_url, self.car_data)
+        self.client.post(self.post_url, self.car2_data)
+
+        # Get car #1
+
+        car = Car.objects.get(id=1)
+        serializer = CarSerializer(car)
+
+        url = reverse("car", args=[1])
+        response = self.client.get(url)
+
+        self.assertEqual(json.loads(response.content), serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Get a nonexistent car
+
+        url = reverse("car", args=[99])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Get a deleted car
+
+        self.client.post(self.post_url, self.car2_data)
+        url = reverse("car", args=[3])
+        self.client.delete(url)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
