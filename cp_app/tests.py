@@ -57,10 +57,19 @@ class PartnerListTestCase(APITestCase):
         response = self.client.post(self.url, self.partner_data)
 
         partner = Partner.objects.get()
-        serializer = PartnerSerializer(partner)
-        self.assertEqual(json.loads(response.content), serializer.data)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Partner.objects.count(), 1)
+        self.assertEqual(partner.id, 1)
+        self.assertEqual(partner.user_id, self.user.id)
+        self.assertEqual(partner.name, self.name)
+        self.assertEqual(partner.city, self.city)
+        self.assertEqual(partner.address, self.address)
+        self.assertEqual(partner.company_name, self.company_name)
+        self.assertGreater(partner.created_at, 0)
+        self.assertGreater(partner.modify_at, 0)
+        self.assertEqual(partner.deleted_at, 0)
+        self.assertEqual(len(partner.cars), 0)
 
 
 
