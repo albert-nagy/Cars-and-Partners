@@ -226,6 +226,8 @@ class CarListTestCase(APITestCase):
 
         self.user = User.objects.create_user(TEST_USERS[0])
         self.user.save()
+        self.user2 = User.objects.create_user(TEST_USERS[1])
+        self.user2.save()
 
         self.car_data = TEST_CARS[0]
         self.car_data.update({"user": self.user.id})
@@ -287,6 +289,7 @@ class CarDetailTestCase(APITestCase):
     def setUp(self):
 
         self.post_url = reverse("car-list")
+        self.partner_post_url = reverse("partner-list")
         self.client = APIClient()
 
         self.user = User.objects.create_user(TEST_USERS[0])
@@ -298,6 +301,11 @@ class CarDetailTestCase(APITestCase):
         self.car_data.update({"user": self.user.id})
         self.car2_data = TEST_CARS[1]
         self.car2_data.update({"user": self.user.id})
+
+        self.partner_data = TEST_PARTNERS[0]
+        self.partner_data.update({"user": self.user2.id})
+        self.partner2_data = TEST_PARTNERS[1]
+        self.partner2_data.update({"user": self.user2.id})
 
     def test_car_get(self):
         """Check a specific car"""
@@ -374,3 +382,72 @@ class CarDetailTestCase(APITestCase):
         url = reverse("car", args=[99]) 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_car_patch(self):
+        """Try to connect a car with a partner"""
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.post_url, self.car_data)
+        self.client.post(self.partner_post_url, self.partner_data)
+
+        # Try to make connection without authenticating
+
+        self.client.force_authenticate(user=None)
+
+        url = reverse("car", args=[1])
+        data = {"partner": 1}
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to connect someone else's car
+
+        self.client.force_authenticate(user=self.user2)
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to connect own car with somwoe else's partner
+
+        self.client.post(self.partner_post_url, self.partner2_data)
+
+        self.client.force_authenticate(user=self.user)
+        data = {"partner": 2}
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to connect a deleted car
+
+        self.client.delete(url)
+
+        data = {"partner": 1}
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Try to connect car with a deleted partner
+
+        self.client.post(self.post_url, self.car_data)
+
+        partner_url = reverse("partner", args=[1])
+        self.client.delete(partner_url)
+
+        url = reverse("car", args=[2])
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Try to connect car with partner
+
+        self.client.post(self.partner_post_url, self.partner_data)
+
+        data = {"partner": 3}
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        car = Car.objects.get(id=2)
+        partner = Partner.objects.get(id=3)
+        self.assertIn(3, car.partners)
+        self.assertIn(2, partner.cars)
+
+        # Try to make an existing connection again
+
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
