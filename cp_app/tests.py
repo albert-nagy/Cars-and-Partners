@@ -108,8 +108,53 @@ class PartnerListTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+class PartnerDetailTestCase(APITestCase):
+    
+    def setUp(self):
 
+        self.post_url = reverse("partner-list")
+        self.client = APIClient()
 
+        self.user = User.objects.create_user(TEST_USERS[0])
+        self.user.save()
+
+        self.partner_data = TEST_PARTNERS[0]
+        self.partner_data.update({"user": self.user.id})
+        self.partner2_data = TEST_PARTNERS[1]
+        self.partner2_data.update({"user": self.user.id})
+
+    def test_partner_get(self):
+        """Check a specific partner"""
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.post_url, self.partner_data)
+        self.client.post(self.post_url, self.partner2_data)
+
+        # Get partner #2
+
+        partners = Partner.objects.get(id=2)
+        serializer = PartnerSerializer(partners)
+
+        url = reverse("partner", args=[2])
+        response = self.client.get(url)
+
+        self.assertEqual(json.loads(response.content), serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Get a nonexistent parner
+
+        url = reverse("partner", args=[4])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Get a deleted parner
+        
+        self.client.post(self.post_url, self.partner2_data)
+        url = reverse("partner", args=[3])
+        self.client.delete(url)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         
 
