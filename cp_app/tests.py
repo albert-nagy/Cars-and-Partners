@@ -84,7 +84,10 @@ class PartnerListTestCase(APITestCase):
         self.assertEqual(partner.name, self.partner_data["name"])
         self.assertEqual(partner.city, self.partner_data["city"])
         self.assertEqual(partner.address, self.partner_data["address"])
-        self.assertEqual(partner.company_name, self.partner_data["company_name"])
+        self.assertEqual(
+            partner.company_name,
+            self.partner_data["company_name"]
+            )
         self.assertGreater(partner.created_at, 0)
         self.assertGreater(partner.modify_at, 0)
         self.assertEqual(partner.deleted_at, 0)
@@ -117,6 +120,8 @@ class PartnerDetailTestCase(APITestCase):
 
         self.user = User.objects.create_user(TEST_USERS[0])
         self.user.save()
+        self.user2 = User.objects.create_user(TEST_USERS[1])
+        self.user2.save()
 
         self.partner_data = TEST_PARTNERS[0]
         self.partner_data.update({"user": self.user.id})
@@ -131,8 +136,8 @@ class PartnerDetailTestCase(APITestCase):
 
         # Get partner #2
 
-        partners = Partner.objects.get(id=2)
-        serializer = PartnerSerializer(partners)
+        partner = Partner.objects.get(id=2)
+        serializer = PartnerSerializer(partner)
 
         url = reverse("partner", args=[2])
         response = self.client.get(url)
@@ -142,13 +147,13 @@ class PartnerDetailTestCase(APITestCase):
 
         # Get a nonexistent parner
 
-        url = reverse("partner", args=[4])
+        url = reverse("partner", args=[99])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         # Get a deleted parner
-        
+
         self.client.post(self.post_url, self.partner2_data)
         url = reverse("partner", args=[3])
         self.client.delete(url)
@@ -156,7 +161,48 @@ class PartnerDetailTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        
+    def test_partner_delete(self):
+        """Try to delete a specific partner"""
+
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.post_url, self.partner_data)
+
+        # First try to delete a partner without any authentication
+
+        self.client.force_authenticate(user=None)
+
+        url = reverse("partner", args=[1])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to delete a partner
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        partner = Partner.objects.get(id=1)
+        self.assertGreater(partner.deleted_at, 0)
+
+        # Try to delete an already deleted partner
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Try to delete a partner of another user
+        self.client.post(self.post_url, self.partner_data)
+        url = reverse("partner", args=[2])
+
+        self.client.force_authenticate(user=self.user2)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to delete a nonexistent partner
+
+        url = reverse("partner", args=[99]) 
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 
