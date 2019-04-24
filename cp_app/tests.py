@@ -331,3 +331,46 @@ class CarDetailTestCase(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_car_delete(self):
+        """Try to delete a specific car"""
+
+        self.client.force_authenticate(user=self.user)
+        self.client.post(self.post_url, self.car_data)
+
+        # First try to delete a car without any authentication
+
+        self.client.force_authenticate(user=None)
+
+        url = reverse("car", args=[1])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to delete a car
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        car = Car.objects.get(id=1)
+        self.assertGreater(car.deleted_at, 0)
+
+        # Try to delete an already deleted partner
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Try to delete a car of another user
+        self.client.post(self.post_url, self.car_data)
+        url = reverse("car", args=[2])
+
+        self.client.force_authenticate(user=self.user2)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Try to delete a nonexistent car
+
+        url = reverse("car", args=[99]) 
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
