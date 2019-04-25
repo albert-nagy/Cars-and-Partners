@@ -1,7 +1,10 @@
 ## Installation
 
+Intstall and start using the attached docker:
+
 ```bash
-pip install psycopg2-binary django==1.11.20 djangorestframework django-unixtimestampfield django-request-logging django-rest-auth
+docker-compose build
+docker-compose up -d
 ```
 
 ## Endpoints
