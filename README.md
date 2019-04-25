@@ -105,3 +105,11 @@ The partner's ID gets stored in the car's respective array field and vice versa.
 ```bash
 curl -X PATCH -H "Authorization: Token XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" -H "Content-type: application/json" -d '{"partner": PARTNER_ID}' 'http://127.0.0.1:8000/api/v1/cars/ID/'
 ```
+
+## Unit testing
+
+Run tests with the following command:
+
+```bash
+docker-compose exec app python manage.py test
+```
