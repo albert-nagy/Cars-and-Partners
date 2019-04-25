@@ -2,6 +2,7 @@ from rest_framework import serializers
 from cp_app.models import Partner, Car
 from django.contrib.auth.models import User
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -13,10 +14,12 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
 class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partner
         fields = '__all__'
+
 
 class CarSerializer(serializers.ModelSerializer):
     class Meta:

@@ -25,6 +25,7 @@ s_404 = status.HTTP_404_NOT_FOUND
 
 # Authorization decorator:
 
+
 def authorizeUser(fn):
     @wraps(fn)
     def wrapper(obj, request, *args, **kwargs):
@@ -42,22 +43,23 @@ def authorizeUser(fn):
                     return Response(
                         "The requested item was already deleted",
                         status=s_404
-                        )
+                    )
                 if item.user_id != request.user.id:
                     return Response(
                         "You have no permission to change this item!",
                         status=s_401
-                        )
+                    )
             except item_model.DoesNotExist:
                 return Response(
-                "The requested item was not found",
-                status=s_404
+                    "The requested item was not found",
+                    status=s_404
                 )
         response = fn(obj, request, *args)
         return response
     return wrapper
 
 # Helper functions:
+
 
 def save_item(serializer):
     if serializer.is_valid():
@@ -67,11 +69,13 @@ def save_item(serializer):
 
 # Views:
 
+
 class UserAdd(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         response = save_item(serializer)
         return Response(response[0], status=response[1])
+
 
 class PartnerList(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -88,7 +92,7 @@ class PartnerList(APIView):
         serializer = PartnerSerializer(data=request.data)
         if serializer.is_valid():
             try:
-                id = Partner.objects.latest('id').id +1
+                id = Partner.objects.latest('id').id + 1
             except Partner.DoesNotExist:
                 id = 1
             user = User.objects.get(id=request.user.id)
@@ -96,7 +100,7 @@ class PartnerList(APIView):
             return Response(serializer.data, status=s_201)
         return Response(serializer.errors, status=s_400)
 
-    
+
 class PartnerDetail(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -108,7 +112,7 @@ class PartnerDetail(APIView):
             return HttpResponse(
                 "The requested partner was not found",
                 status=404
-                )
+            )
 
         serializer = PartnerSerializer(partner)
         return JsonResponse(serializer.data)
@@ -125,9 +129,8 @@ class PartnerDetail(APIView):
             data.update({"cars": car_list})
             cars = Car.objects.filter(id__in=partner.cars)
             for car in cars:
-                partner_list = [
-                part * -1 if part == int(id) else part for part in car.partners
-                ]
+                partner_list = [part * -1 if part ==
+                                int(id) else part for part in car.partners]
                 car_data = {"partners": partner_list}
                 serializer = CarSerializer(car, data=car_data, partial=True)
                 response = save_item(serializer)
@@ -137,7 +140,7 @@ class PartnerDetail(APIView):
         response = save_item(serializer)
         return Response(response[0], status=response[1])
 
-               
+
 class CarList(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -146,20 +149,21 @@ class CarList(APIView):
         cars = Car.objects.filter(deleted_at=0).order_by('id')
         serializer = CarSerializer(cars, many=True)
         return JsonResponse(serializer.data, safe=False)
-  
+
     @authorizeUser
     def post(self, request):
         """Create new car"""
         serializer = CarSerializer(data=request.data)
         if serializer.is_valid():
             try:
-                id = Car.objects.latest('id').id +1
+                id = Car.objects.latest('id').id + 1
             except Car.DoesNotExist:
                 id = 1
             user = User.objects.get(id=request.user.id)
             serializer.save(id=id, user=user)
             return Response(serializer.data, status=s_201)
         return Response(serializer.errors, status=s_400)
+
 
 class CarDetail(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -182,21 +186,19 @@ class CarDetail(APIView):
         # If there are connections, archive them by setting their ids negative
         # in the connections list and vice versa
         if len(car.partners) > 0:
-            partner_list = [
-            partner * -1 if partner > 0 else partner for partner in car.partners
-            ]
+            partner_list = [partner * -1 if partner >
+                            0 else partner for partner in car.partners]
             data.update({"partners": partner_list})
             partners = Partner.objects.filter(id__in=car.partners)
             for partner in partners:
-                car_list = [
-                c_id * -1 if c_id == int(id) else c_id for c_id in partner.cars
-                ]
+                car_list = [c_id * -1 if c_id ==
+                            int(id) else c_id for c_id in partner.cars]
                 partner_data = {"cars": car_list}
                 serializer = PartnerSerializer(
                     partner,
                     data=partner_data,
                     partial=True
-                    )
+                )
                 response = save_item(serializer)
                 if response[1] == s_400:
                     return Response(response[0], status=response[1])
@@ -212,10 +214,10 @@ class CarDetail(APIView):
         partner_id = request.data.get('partner')
         partner = Partner.objects.get(id=partner_id)
         if partner.deleted_at > 0:
-                    return Response(
-                        "The requested partner was already deleted",
-                        status=s_404
-                        )
+            return Response(
+                "The requested partner was already deleted",
+                status=s_404
+            )
         partner_cars = partner.cars
 
         if partner.user_id == request.user.id:
@@ -228,7 +230,7 @@ class CarDetail(APIView):
                     car,
                     data=data,
                     partial=True
-                    )
+                )
                 response = save_item(serializer)
                 # If something went wrong, get an error message right here
                 if response[1] == s_400:
@@ -242,7 +244,7 @@ class CarDetail(APIView):
                     partner,
                     data=data,
                     partial=True
-                    )
+                )
                 response = save_item(serializer)
                 # If something went wrong here, break
                 if response[1] == s_400:
@@ -251,10 +253,10 @@ class CarDetail(APIView):
                 response_data.update({"partner": response[0]})
                 return Response(response_data, status=response[1])
             return Response(
-            "Partner was already assigned to this car",
-            status=s_400
+                "Partner was already assigned to this car",
+                status=s_400
             )
         return Response(
             "You can only assign your own partners to your cars",
             status=s_401
-            )
+        )
