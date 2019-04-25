@@ -7,7 +7,7 @@ from rest_framework.test import (
     APITestCase,
     APIRequestFactory,
     force_authenticate
-    )
+)
 
 from django.contrib.auth.models import User
 from cp_app.models import Partner, Car
@@ -16,46 +16,47 @@ from cp_app.serializers import PartnerSerializer, CarSerializer, UserSerializer
 # Create your tests here.
 
 TEST_USERS = [
-{
-"username": "someone",
-"email": "x@z.hu",
-"password": "truthisoutthere"
-},
-{
-"username": "anyone",
-"email": "x@z.de",
-"password": "noneofyourbusiness"
-}
+    {
+        "username": "someone",
+        "email": "x@z.hu",
+        "password": "truthisoutthere"
+    },
+    {
+        "username": "anyone",
+        "email": "x@z.de",
+        "password": "noneofyourbusiness"
+    }
 ]
 
 TEST_PARTNERS = [
-{
-"name": "Lapos Elemér",
-"city": "Albertirsa",
-"address": "Elmebaj u. 999",
-"company_name": "Q Kft."
-},
-{
-"name": "Bekő Tóni",
-"city": "Kiskunbürgözd",
-"address": "Pacsirta u. 72",
-"company_name": "Béka Bt."
-}
+    {
+        "name": "Lapos Elemér",
+        "city": "Albertirsa",
+        "address": "Elmebaj u. 999",
+        "company_name": "Q Kft."
+    },
+    {
+        "name": "Bekő Tóni",
+        "city": "Kiskunbürgözd",
+        "address": "Pacsirta u. 72",
+        "company_name": "Béka Bt."
+    }
 ]
 
 TEST_CARS = [
-{
-"average_fuel": 6.7,
-"driver": "Rozs Réka",
-"owner": "Zab Bence",
-"type": "pr"
-},
-{
-"average_fuel": 110,
-"driver": "Árpa Árpád",
-"owner": "Gondatlan Gazda",
-}
+    {
+        "average_fuel": 6.7,
+        "driver": "Rozs Réka",
+        "owner": "Zab Bence",
+        "type": "pr"
+    },
+    {
+        "average_fuel": 110,
+        "driver": "Árpa Árpád",
+        "owner": "Gondatlan Gazda",
+    }
 ]
+
 
 class PartnerListTestCase(APITestCase):
 
@@ -71,7 +72,6 @@ class PartnerListTestCase(APITestCase):
 
         self.partner2_data = TEST_PARTNERS[1]
         self.partner2_data.update({"user": self.user.id})
-
 
     def test_create_partner(self):
         """Try to create partner"""
@@ -100,7 +100,7 @@ class PartnerListTestCase(APITestCase):
         self.assertEqual(
             partner.company_name,
             self.partner_data["company_name"]
-            )
+        )
         self.assertGreater(partner.created_at, 0)
         self.assertGreater(partner.modify_at, 0)
         self.assertEqual(partner.deleted_at, 0)
@@ -124,8 +124,9 @@ class PartnerListTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+
 class PartnerDetailTestCase(APITestCase):
-    
+
     def setUp(self):
 
         self.post_url = reverse("partner-list")
@@ -213,7 +214,7 @@ class PartnerDetailTestCase(APITestCase):
 
         # Try to delete a nonexistent partner
 
-        url = reverse("partner", args=[99]) 
+        url = reverse("partner", args=[99])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -256,7 +257,10 @@ class CarListTestCase(APITestCase):
         self.assertEqual(Car.objects.count(), 1)
         self.assertEqual(car.id, 1)
         self.assertEqual(car.user_id, self.car_data["user"])
-        self.assertEqual(float(car.average_fuel), self.car_data["average_fuel"])
+        self.assertEqual(
+            float(
+                car.average_fuel),
+            self.car_data["average_fuel"])
         self.assertEqual(car.driver, self.car_data["driver"])
         self.assertEqual(car.owner, self.car_data["owner"])
         self.assertEqual(car.type, self.car_data["type"])
@@ -284,8 +288,9 @@ class CarListTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+
 class CarDetailTestCase(APITestCase):
-    
+
     def setUp(self):
 
         self.post_url = reverse("car-list")
@@ -302,7 +307,6 @@ class CarDetailTestCase(APITestCase):
 
         self.partner_data = TEST_PARTNERS[0]
         self.partner2_data = TEST_PARTNERS[1]
-        
 
     def test_car_get(self):
         """Check a specific car"""
@@ -376,10 +380,9 @@ class CarDetailTestCase(APITestCase):
 
         # Try to delete a nonexistent car
 
-        url = reverse("car", args=[99]) 
+        url = reverse("car", args=[99])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
 
     def test_car_patch(self):
         """Try to connect a car with a partner"""
@@ -448,6 +451,7 @@ class CarDetailTestCase(APITestCase):
         response = self.client.patch(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
 class DeleteWithConnectionTestCase(APITestCase):
 
     def setUp(self):
@@ -466,7 +470,7 @@ class DeleteWithConnectionTestCase(APITestCase):
 
         self.partner_data = TEST_PARTNERS[0]
         self.partner2_data = TEST_PARTNERS[1]
-       
+
     def test_delete_car_with_connections(self):
         """Delete a car with existing connections"""
 
@@ -496,12 +500,16 @@ class DeleteWithConnectionTestCase(APITestCase):
 
         self.assertIn(-1, car.partners)
         self.assertIn(-2, car.partners)
+        self.assertNotIn(1, car.partners)
+        self.assertNotIn(2, car.partners)
 
         partner1 = Partner.objects.get(id=1)
         partner2 = Partner.objects.get(id=2)
 
         self.assertIn(-1, partner1.cars)
         self.assertIn(-1, partner2.cars)
+        self.assertNotIn(1, partner1.cars)
+        self.assertNotIn(1, partner2.cars)
 
     def test_delete_partner_with_connections(self):
         """Delete a partner with existing connections"""
@@ -532,9 +540,13 @@ class DeleteWithConnectionTestCase(APITestCase):
 
         self.assertIn(-1, partner.cars)
         self.assertIn(-2, partner.cars)
+        self.assertNotIn(1, partner.cars)
+        self.assertNotIn(2, partner.cars)
 
         car1 = Car.objects.get(id=1)
         car2 = Car.objects.get(id=2)
 
         self.assertIn(-1, car1.partners)
         self.assertIn(-1, car2.partners)
+        self.assertNotIn(1, car1.partners)
+        self.assertNotIn(1, car2.partners)
