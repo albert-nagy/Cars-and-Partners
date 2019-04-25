@@ -102,8 +102,8 @@ DATABASES = {
         'NAME': 'cp_project',
         'USER': 'cp_user',
         'PASSWORD': 'albert1904',
-        'HOST': 'localhost',
-        'PORT': '',
+        'HOST': 'postgres',
+        'PORT': '5432',
     }
 }
 
