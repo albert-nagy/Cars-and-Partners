@@ -1,3 +1,44 @@
+## Description
+
+In this task I had to create a Django REST API.
+
+According to the story, the users visit their business partners by car. So a user can have partners and cars and we have to able to specify, which cars are used for visiting a specific partner.
+
+According to the specification users should be able to log in and
+
+- create,
+- read,
+- delete,
+- or connect
+
+their cars and partners via respective JSON endpoints.
+Regarding the user management a login endpoint is enough.
+All entities have automatically filled created_at, modify_at and deleted_at fields, storing time in unix timestamp. If the deleted_at field's value is not 0, the entity is considered deleted.
+The car-partner connection should be saved from the car's side when cars and partners already exist, and stored in array fields in both car and partner models.
+
+> *I have to admit that I would do thid differently: I would use a separate table to store car-partner connections, instead of storing the same information in two places. With a separate "connections" table it would be easier to create, delete connections or just making them dormant. This model would enable saving time informations about creation, modification, deletion or last usage of the connection as well.*
+
+The view has to contain a decorator that binds entity methods to authentication.
+All car and partner entity methods should have unit tests.
+The system has to log all requests using a middleware.
+
+The environment was specified as following:
+
+- Python 3.6
+- PostgreSQL 10
+- Django 1.11.20
+
+The application should prefferrably run in a docker.
+
+### Technologies used to complete this task
+
+* Python 3
+* Django
+* Django REST Framework
+* Django REST Auth
+* PostgreSQL
+* Docker
+
 ## Installation
 
 Intstall and start using the attached docker:
