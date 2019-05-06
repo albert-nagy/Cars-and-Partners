@@ -13,10 +13,10 @@ According to the specification users should be able to log in and
 
 their cars and partners via respective JSON endpoints.
 Regarding the user management a login endpoint is enough.
-All entities have automatically filled created_at, modify_at and deleted_at fields, storing time in unix timestamp. If the deleted_at field's value is not 0, the entity is considered deleted.
+All entities have automatically filled *created_at*, *modify_at* and *deleted_at* fields, storing time in unix timestamp. If the *deleted_at* field's value is not 0, the entity is considered deleted.
 The car-partner connection should be saved from the car's side when cars and partners already exist, and stored in array fields in both car and partner models.
 
-> *I have to admit that I would do thid differently: I would use a separate table to store car-partner connections, instead of storing the same information in two places. With a separate "connections" table it would be easier to create, delete connections or just making them dormant. This model would enable saving time informations about creation, modification, deletion or last usage of the connection as well.*
+> *I have to admit that I would do this differently: I would use a separate table to store car-partner connections, instead of storing the same information in two places. With a separate "connections" table it would be easier to create, delete connections or just making them dormant. This model would enable saving time informations about creation, modification, deletion or last usage of the connection as well.*
 
 The view has to contain a decorator that binds entity methods to authentication.
 All car and partner entity methods should have unit tests.
